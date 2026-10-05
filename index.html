@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CH2 – AD2 – La dilution</title>
+<style>
+  :root {
+    --bleu:#1F4E79;--bleu2:#2E75B6;--bleu3:#D6E4F0;
+    --rouge:#C00000;--vert:#1E6B2E;--orange:#E67E22;--violet:#7D3C98;
+    --gris:#F4F4F4;--gris2:#DDDDDD;--noir:#1A1A1A;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Segoe UI',Arial,sans-serif;background:#ECEFF4;color:var(--noir);font-size:15px;}
+
+  header{background:var(--bleu);color:white;padding:12px 24px;display:flex;align-items:center;gap:14px;box-shadow:0 2px 8px rgba(0,0,0,0.3);}
+  .header-badge{background:var(--rouge);color:white;font-weight:700;font-size:14px;padding:6px 12px;border-radius:6px;white-space:nowrap;}
+  .header-titles h1{font-size:17px;font-weight:700;line-height:1.2;}
+  .header-titles p{font-size:12px;opacity:0.75;margin-top:2px;}
+
+  .eleve-bar{background:white;border-bottom:2px solid var(--bleu3);padding:10px 20px;display:flex;gap:20px;align-items:center;flex-wrap:wrap;}
+  .eleve-bar label{font-size:12px;font-weight:700;color:var(--bleu);white-space:nowrap;}
+  .eleve-bar input{border:none;border-bottom:1.5px solid var(--bleu2);padding:3px 6px;font-size:13px;font-family:inherit;background:transparent;color:var(--noir);width:160px;outline:none;}
+  .eleve-bar input:focus{border-bottom-color:var(--rouge);}
+  .eleve-field{display:flex;align-items:center;gap:6px;}
+
+  .toolbox{margin:14px 20px 0;background:white;border:2px solid var(--bleu2);border-radius:10px;overflow:hidden;}
+  .toolbox-header{background:var(--bleu2);color:white;padding:10px 16px;font-weight:700;font-size:14px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;user-select:none;}
+  .toolbox-header:hover{background:var(--bleu);}
+  .toolbox-body{padding:14px 16px;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;}
+  .toolbox-body.collapsed{display:none;}
+  .def-card{background:var(--gris);border-left:4px solid var(--bleu2);border-radius:6px;padding:10px 12px;}
+  .def-card h4{color:var(--bleu);font-size:13px;margin-bottom:6px;}
+  .def-card p{font-size:13px;line-height:1.6;}
+  .def-card .formula{background:white;border:1px solid var(--gris2);border-radius:4px;padding:8px 12px;margin-top:6px;font-size:14px;text-align:center;font-style:italic;}
+
+  .tabs-wrapper{margin:14px 20px 0;}
+  .tabs{display:flex;gap:4px;overflow-x:auto;padding-bottom:2px;}
+  .tab-btn{background:white;border:2px solid var(--gris2);border-bottom:none;border-radius:8px 8px 0 0;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;color:#666;white-space:nowrap;transition:all .2s;}
+  .tab-btn:hover{background:var(--bleu3);color:var(--bleu);}
+  .tab-btn.active{background:var(--bleu);color:white;border-color:var(--bleu);}
+  .tab-content{background:white;border:2px solid var(--gris2);border-radius:0 8px 8px 8px;padding:20px;display:none;}
+  .tab-content.active{display:block;}
+
+  .section-title{font-size:18px;font-weight:700;color:var(--bleu);text-align:center;text-transform:uppercase;letter-spacing:1px;margin-bottom:16px;padding:8px;border-bottom:3px solid var(--bleu3);}
+
+  canvas{border:2px solid var(--gris2);border-radius:8px;display:block;}
+
+  .doc-label{background:var(--bleu2);color:white;font-weight:700;font-size:13px;padding:5px 12px;border-radius:6px 6px 0 0;display:inline-block;}
+  .doc-box{border:2px solid var(--bleu2);border-radius:0 8px 8px 8px;padding:12px 14px;background:white;margin-bottom:16px;}
+  .doc-box p{font-size:13px;line-height:1.6;margin-bottom:8px;}
+  .doc-box p:last-child{margin-bottom:0;}
+
+  .question-block{margin-bottom:12px;}
+  .q-label{background:var(--bleu3);border-left:4px solid var(--bleu);color:var(--bleu);font-size:13px;font-weight:700;padding:7px 12px;border-radius:0 6px 0 0;}
+  .question{background:var(--gris);border:1.5px solid var(--bleu3);border-top:none;border-radius:0 0 6px 6px;padding:9px 12px;}
+  .question .code{display:inline-block;background:var(--bleu);color:white;font-size:11px;font-weight:700;padding:2px 6px;border-radius:3px;margin-right:5px;}
+  .question p{font-size:13px;line-height:1.5;display:inline;}
+  .answer-field{width:100%;margin-top:6px;padding:7px 10px;border:1.5px solid var(--bleu3);border-radius:6px;font-family:inherit;font-size:13px;color:var(--noir);background:#FAFCFF;resize:vertical;min-height:60px;outline:none;transition:border-color .15s;}
+  .answer-field:focus{border-color:var(--bleu2);background:white;}
+
+  .resp-table{width:100%;border-collapse:collapse;font-size:13px;margin:10px 0;}
+  .resp-table th{background:var(--bleu2);color:white;padding:8px 12px;border:1px solid var(--bleu);font-weight:700;text-align:center;}
+  .resp-table td{padding:7px 10px;border:1px solid var(--gris2);vertical-align:middle;text-align:center;}
+  .resp-table td:first-child{background:var(--gris);font-weight:700;color:var(--bleu);text-align:left;white-space:nowrap;}
+  .resp-table input[type=text]{border:none;border-bottom:1.5px solid var(--bleu2);padding:2px 4px;font-family:inherit;font-size:13px;width:100%;background:transparent;outline:none;text-align:center;}
+  .resp-table input[type=text]:focus{border-bottom-color:var(--rouge);}
+
+  .ex-header{display:flex;align-items:center;gap:10px;margin-bottom:12px;margin-top:20px;}
+  .ex-badge{background:var(--orange);color:white;font-weight:700;font-size:15px;padding:5px 14px;border-radius:6px;}
+  .ex-title{font-size:16px;font-weight:700;color:var(--bleu);}
+  .ex-subtitle{font-size:12px;color:#666;font-style:italic;}
+  .ex-enonce{background:var(--gris);border-left:4px solid var(--orange);border-radius:0 6px 6px 0;padding:10px 14px;margin-bottom:12px;font-size:13px;line-height:1.7;}
+  .ex-enonce strong{color:var(--bleu);}
+  .donnees-box{background:#FFF8E1;border:1.5px solid #F0C040;border-radius:7px;padding:10px 14px;margin-bottom:10px;font-size:13px;}
+  .donnees-box h4{color:#8B6000;font-size:12px;font-weight:700;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px;}
+  .donnees-box ul{margin-left:16px;line-height:1.7;}
+  .sub-question{margin-bottom:10px;}
+  .sub-q-label{font-size:13px;font-weight:600;color:var(--bleu);margin-bottom:4px;}
+  .attn-box{background:#FFF3E0;border:1.5px solid var(--orange);border-radius:7px;padding:10px 14px;margin:10px 0;font-size:13px;line-height:1.6;}
+  .attn-box strong{color:#BF4000;}
+  .danger-box{background:#FFF0F0;border:1.5px solid var(--rouge);border-radius:7px;padding:10px 14px;margin-bottom:10px;font-size:12px;line-height:1.5;}
+  .danger-box h4{color:var(--rouge);font-size:12px;font-weight:700;margin-bottom:4px;text-transform:uppercase;}
+  .danger-codes{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;}
+  .danger-code{background:var(--rouge);color:white;font-size:11px;font-weight:700;padding:2px 7px;border-radius:4px;}
+
+  .steps-list{counter-reset:step;display:flex;flex-direction:column;gap:8px;margin-top:8px;}
+  .step-item{display:flex;gap:10px;align-items:flex-start;background:var(--gris);border-radius:6px;padding:10px 12px;}
+  .step-num{background:var(--bleu2);color:white;font-weight:700;font-size:13px;min-width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+  .step-item p{font-size:13px;line-height:1.5;}
+
+  .mat-table{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px;}
+  .mat-table th{background:var(--bleu);color:white;padding:7px 10px;border:1px solid var(--bleu2);text-align:left;}
+  .mat-table td{padding:6px 10px;border:1px solid var(--gris2);vertical-align:top;}
+  .mat-table tr:nth-child(even) td{background:var(--gris);}
+
+  .bilan-section{background:white;border:2px solid var(--vert);border-radius:10px;overflow:hidden;margin-bottom:16px;}
+  .bilan-header{background:var(--vert);color:white;padding:10px 16px;font-weight:700;font-size:14px;}
+  .bilan-body{padding:16px 18px;}
+  .bilan-bloc-title{font-size:12px;font-weight:700;color:var(--vert);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;padding-bottom:4px;border-bottom:1px solid #C8E6C9;}
+  .trous-block{background:#F0FAF2;border:1.5px solid #A5D6A7;border-radius:8px;padding:14px 18px;margin-bottom:14px;font-size:13px;line-height:2.8;}
+  .trou{display:inline-block;border-bottom:2px solid var(--bleu2);min-width:100px;margin:0 3px;vertical-align:bottom;}
+  .trou input{border:none;outline:none;background:transparent;font-family:inherit;font-size:13px;width:100px;color:var(--noir);padding:0 2px;}
+
+  .canvas-zone{display:flex;gap:16px;align-items:flex-end;justify-content:center;flex-wrap:wrap;margin:14px 0;}
+  .canvas-item{text-align:center;}
+  .canvas-caption{font-size:12px;font-weight:700;color:var(--bleu);margin-top:6px;}
+
+  .schéma-dilution{background:#f8f9fa;border:2px solid var(--gris2);border-radius:10px;padding:14px;margin:12px 0;display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;}
+  .flask-card{text-align:center;min-width:100px;}
+  .flask-label{font-size:12px;font-weight:700;color:var(--bleu);margin-bottom:4px;}
+  .flask-sub{font-size:11px;color:#666;margin-top:4px;}
+  .arrow-dilution{font-size:28px;color:var(--bleu2);display:flex;flex-direction:column;align-items:center;gap:2px;margin:0 4px;}
+  .arrow-dilution span{font-size:11px;color:#888;font-style:italic;}
+
+  .nav-bottom{display:flex;justify-content:flex-end;margin-top:14px;gap:8px;}
+  .btn-nav{background:var(--bleu);color:white;border:none;border-radius:6px;padding:7px 16px;font-size:13px;font-weight:600;cursor:pointer;}
+  .btn-nav:hover{background:var(--bleu2);}
+
+  .print-bar{display:flex;justify-content:flex-end;margin:10px 20px 4px;gap:10px;align-items:center;flex-wrap:wrap;}
+  .save-bar{display:flex;justify-content:flex-end;align-items:center;gap:10px;flex:1;padding:8px 12px;background:white;border:2px solid var(--bleu2);border-radius:8px;}
+  .save-bar span:first-child{font-size:13px;color:#555;}
+  .save-status{font-size:12px;color:#888;font-style:italic;flex:1;text-align:right;}
+  .save-status.ok{color:var(--vert);font-style:normal;font-weight:600;}
+  .save-status.warn{color:var(--orange);font-style:normal;font-weight:600;}
+  .btn-save{background:var(--vert);color:white;border:none;border-radius:7px;padding:7px 16px;font-size:13px;font-weight:700;cursor:pointer;}
+  .btn-clear{background:#C00000;color:white;border:none;border-radius:7px;padding:7px 14px;font-size:13px;font-weight:700;cursor:pointer;}
+  .btn-print{background:var(--bleu2);color:white;border:none;border-radius:7px;padding:7px 16px;font-size:13px;font-weight:700;cursor:pointer;}
+
+  sup{font-size:0.75em;}
+  sub{font-size:0.75em;}
+  hr.sep{border:none;border-top:2px solid var(--bleu3);margin:16px 0;}
+
+  @media print {
+    @page{margin:0.8cm;}
+    header,.toolbox,.tabs,.nav-bottom,.print-bar,.save-bar{display:none !important;}
+    canvas{display:none !important;}
+    body{background:white;font-size:10pt;color:black;}
+    .eleve-bar{display:flex !important;border:1pt solid #999;border-radius:4pt;padding:5pt 8pt;margin-bottom:6pt;gap:12pt;}
+    .eleve-bar input{border-bottom:1pt solid black;font-size:10pt;width:110pt;}
+    .tab-content{display:block !important;border:1pt solid #CCC;border-radius:4pt;padding:7pt;margin-bottom:8pt;}
+    .tabs-wrapper{margin:0;}
+    .answer-field{border:1pt solid #999;min-height:22pt;font-size:10pt;padding:3pt;}
+    .bilan-section{border:1pt solid #1E6B2E;border-radius:4pt;}
+    .bilan-header{background:#1E6B2E;color:white;padding:4pt 8pt;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    .bilan-body{padding:5pt 8pt;}
+    .trous-block{font-size:10pt;padding:5pt 8pt;}
+    .trou input{font-size:10pt;}
+    .ex-enonce{font-size:10pt;padding:4pt 6pt;}
+    .donnees-box{font-size:9pt;padding:4pt 6pt;}
+    .step-item{page-break-inside:avoid;}
+    .schéma-dilution{border:1pt solid #ccc;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-badge">CH2 – AD2</div>
+  <div class="header-titles">
+    <h1>Les solutions aqueuses – La dilution</h1>
+    <p>Chimie · Seconde · Corps purs et mélanges</p>
+  </div>
+</header>
+
+<div class="eleve-bar">
+  <div class="eleve-field"><label>Nom :</label><input type="text" id="nom"></div>
+  <div class="eleve-field"><label>Prénom :</label><input type="text" id="prenom"></div>
+  <div class="eleve-field"><label>Classe :</label><input type="text" id="classe" style="width:80px"></div>
+  <div class="eleve-field"><label>Date :</label><input type="date" id="date-tp"></div>
+</div>
+
+<!-- Boîte à outils -->
+<div class="toolbox">
+  <div class="toolbox-header" onclick="toggleTB()">
+    📘 Formules et définitions clés
+    <span id="tb-arrow">▼</span>
+  </div>
+  <div class="toolbox-body" id="tb-body">
+    <div class="def-card">
+      <h4>🔬 Dilution</h4>
+      <p>Opération consistant à ajouter du solvant (eau distillée) à une solution mère pour obtenir une solution fille moins concentrée.</p>
+    </div>
+    <div class="def-card">
+      <h4>⚖️ Conservation de la masse de soluté</h4>
+      <p>Lors d'une dilution, la masse de soluté est conservée :</p>
+      <div class="formula"><i>m</i><sub>mère</sub> = <i>m</i><sub>fille</sub></div>
+      <div class="formula"><i>C</i><sub>m0</sub> × <i>V</i><sub>mère</sub> = <i>C</i><sub>m1</sub> × <i>V</i><sub>fille</sub></div>
+    </div>
+    <div class="def-card">
+      <h4>📐 Facteur de dilution <i>F</i></h4>
+      <p>Toujours supérieur à 1 :</p>
+      <div class="formula"><i>F</i> = <i>C</i><sub>m0</sub> / <i>C</i><sub>m1</sub> = <i>V</i><sub>fille</sub> / <i>V</i><sub>mère</sub></div>
+    </div>
+    <div class="def-card">
+      <h4>🧪 Volume de solution mère à prélever</h4>
+      <div class="formula"><i>V</i><sub>mère</sub> = <i>V</i><sub>fille</sub> / <i>F</i></div>
+      <div class="formula"><i>V</i><sub>mère</sub> = (<i>C</i><sub>m1</sub> × <i>V</i><sub>fille</sub>) / <i>C</i><sub>m0</sub></div>
+    </div>
+  </div>
+</div>
+
+<div class="print-bar">
+  <div class="save-bar">
+    <span>💾 Travail :</span>
+    <button class="btn-save" onclick="sauvegarder()">Sauvegarder</button>
+    <button class="btn-clear" onclick="effacer()">Effacer</button>
+    <span class="save-status" id="save-status">Non sauvegardé</span>
+  </div>
+  <button class="btn-print" onclick="window.print()">🖨️ Exporter PDF</button>
+</div>
+
+<div class="tabs-wrapper">
+  <div class="tabs">
+    <button class="tab-btn active" onclick="showTab(0)">① Qu'est-ce que la dilution ?</button>
+    <button class="tab-btn" onclick="showTab(1)">② Protocole de dilution</button>
+    <button class="tab-btn" onclick="showTab(2)">③ Bilan</button>
+  </div>
+
+  <!-- ===== ONGLET 0 : Qu'est-ce que la dilution ? ===== -->
+  <div class="tab-content active" id="tab-0">
+    <div class="section-title">Qu'est-ce que la dilution ?</div>
+
+    <!-- Document 1 -->
+    <span class="doc-label">Document 1 — Observation : que se passe-t-il quand on dilue ?</span>
+    <div class="doc-box">
+      <p>On dispose d'une solution mère <i>S</i><sub>0</sub> de sirop de menthe de couleur verte intense (concentration <i>C</i><sub>m0</sub> = 20,0 g·L<sup>−1</sup>).</p>
+      <p>On prélève <i>V</i><sub>mère</sub> = 10,0 mL de cette solution et on la verse dans une fiole jaugée de <i>V</i><sub>fille</sub> = 50,0 mL. On complète au trait de jauge avec de l'eau distillée.</p>
+
+      <!-- Schéma de dilution SVG — 2 fioles jaugées (col+corps d'un seul tenant) -->
+      <!--
+        Géométrie fiole jaugée (cx=110) :
+          Col   : rect x=(cx-16)=94, y=36, w=32, h=84  → col de y=36 à y=120
+          Corps : path bezier depuis (94,120) et (126,120), centre y≈215, max-width≈140
+          Trait de jauge : y=78 (sur le col, à ~2/3 de hauteur)
+          Clip liquide = col rect (94,36,32,84) + corps path → rect coloré depuis y=78
+      -->
+      <svg viewBox="0 0 680 320" xmlns="http://www.w3.org/2000/svg"
+           style="width:100%;max-width:680px;display:block;margin:12px auto;border-radius:10px;overflow:visible;"
+           aria-label="Schéma de la dilution">
+        <defs>
+          <!-- Clip fiole mère : col + corps (cx=110) -->
+          <clipPath id="clip-mere">
+            <rect x="94" y="36" width="32" height="84"/>
+            <path d="M94,120 C78,126 40,155 40,210 C40,250 72,272 110,272 C148,272 180,250 180,210 C180,155 142,126 126,120 Z"/>
+          </clipPath>
+          <!-- Clip fiole fille : col + corps (cx=570) -->
+          <clipPath id="clip-fille">
+            <rect x="554" y="36" width="32" height="84"/>
+            <path d="M554,120 C538,126 500,155 500,210 C500,250 532,272 570,272 C608,272 640,250 640,210 C640,155 602,126 586,120 Z"/>
+          </clipPath>
+          <!-- Marker flèche -->
+          <marker id="arr" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+            <polygon points="0,0 10,5 0,10" fill="#2E75B6"/>
+          </marker>
+        </defs>
+
+        <!-- Fond -->
+        <rect width="680" height="320" rx="10" fill="#F8FAFE" stroke="#D6E4F0" stroke-width="1.5"/>
+
+        <!-- ====== FIOLE MÈRE (gauche, cx=110) ====== -->
+        <text x="110" y="16" text-anchor="middle" font-size="13" font-weight="bold" fill="#1F4E79" font-family="'Segoe UI',Arial,sans-serif">Solution mère S₀</text>
+        <!-- Liquide vert intense (depuis le trait de jauge y=78) -->
+        <rect x="0" y="78" width="220" height="242" fill="#1B7943" opacity="0.80" clip-path="url(#clip-mere)"/>
+        <!-- Reflet sur le col -->
+        <rect x="94" y="36" width="7" height="84" fill="white" opacity="0.15" clip-path="url(#clip-mere)"/>
+        <!-- Contour col -->
+        <rect x="94" y="36" width="32" height="84" fill="none" stroke="#1A5E38" stroke-width="2.5"/>
+        <!-- Contour corps -->
+        <path d="M94,120 C78,126 40,155 40,210 C40,250 72,272 110,272 C148,272 180,250 180,210 C180,155 142,126 126,120 Z" fill="none" stroke="#1A5E38" stroke-width="2.5"/>
+        <!-- Bouchon -->
+        <rect x="88" y="20" width="44" height="16" rx="4" fill="#888" stroke="#555" stroke-width="1.5"/>
+        <!-- Trait de jauge sur le col -->
+        <line x1="84" y1="78" x2="126" y2="78" stroke="#E74C3C" stroke-width="2.5"/>
+        <text x="80" y="82" text-anchor="end" font-size="9" fill="#E74C3C" font-weight="bold" font-family="'Segoe UI',Arial,sans-serif">trait de jauge</text>
+        <!-- Données bas -->
+        <text x="110" y="289" text-anchor="middle" font-size="11" font-weight="bold" fill="#1B7943" font-family="'Segoe UI',Arial,sans-serif">Vert intense</text>
+        <text x="110" y="304" text-anchor="middle" font-size="11" fill="#333" font-family="'Segoe UI',Arial,sans-serif">C<tspan dy="3" font-size="9">m0</tspan><tspan dy="-3"> = 20,0 g·L⁻¹</tspan></text>
+
+        <!-- ====== ÉTAPES (milieu) ====== -->
+        <!-- Étape ① Prélèvement -->
+        <rect x="202" y="45" width="272" height="88" rx="8" fill="#EBF5FF" stroke="#2E75B6" stroke-width="1.8"/>
+        <rect x="213" y="57" width="6" height="48" rx="2" fill="#2E75B6" opacity="0.6"/>
+        <polygon points="213,105 219,105 216,119" fill="#2E75B6" opacity="0.6"/>
+        <text x="348" y="74" text-anchor="middle" font-size="13" font-weight="bold" fill="#1F4E79" font-family="'Segoe UI',Arial,sans-serif">① Prélèvement</text>
+        <text x="348" y="91" text-anchor="middle" font-size="11" fill="#555" font-family="'Segoe UI',Arial,sans-serif">avec une pipette jaugée</text>
+        <text x="348" y="114" text-anchor="middle" font-size="12" font-weight="bold" fill="#1F4E79" font-family="'Segoe UI',Arial,sans-serif">V<tspan dy="3" font-size="9">mère</tspan><tspan dy="-3"> = 10,0 mL</tspan></text>
+
+        <!-- Flèche ① → ② -->
+        <line x1="338" y1="135" x2="338" y2="149" stroke="#2E75B6" stroke-width="2" marker-end="url(#arr)"/>
+
+        <!-- Étape ② + Eau distillée -->
+        <rect x="202" y="152" width="272" height="88" rx="8" fill="#EBF5FF" stroke="#2E75B6" stroke-width="1.8"/>
+        <ellipse cx="219" cy="198" rx="7" ry="9" fill="#4A90D9" opacity="0.65"/>
+        <polygon points="212,196 226,196 219,182" fill="#4A90D9" opacity="0.65"/>
+        <text x="348" y="175" text-anchor="middle" font-size="13" font-weight="bold" fill="#1F4E79" font-family="'Segoe UI',Arial,sans-serif">② + Eau distillée</text>
+        <text x="348" y="192" text-anchor="middle" font-size="11" fill="#555" font-family="'Segoe UI',Arial,sans-serif">jusqu'au trait de jauge</text>
+        <text x="348" y="215" text-anchor="middle" font-size="12" font-weight="bold" fill="#1F4E79" font-family="'Segoe UI',Arial,sans-serif">V<tspan dy="3" font-size="9">fille</tspan><tspan dy="-3"> = 50,0 mL</tspan></text>
+
+        <!-- Conservation masse -->
+        <rect x="210" y="252" width="256" height="46" rx="7" fill="#FFF0F0" stroke="#C00000" stroke-width="1.8" stroke-dasharray="5,3"/>
+        <text x="338" y="271" text-anchor="middle" font-size="11" font-weight="bold" fill="#C00000" font-family="'Segoe UI',Arial,sans-serif">⚖ Masse de soluté conservée</text>
+        <text x="338" y="289" text-anchor="middle" font-size="12" font-weight="bold" fill="#C00000" font-family="'Segoe UI',Arial,sans-serif">m<tspan dy="3" font-size="9">mère</tspan><tspan dy="-3"> = m</tspan><tspan dy="3" font-size="9">fille</tspan></text>
+
+        <!-- ====== FLÈCHES connexion ====== -->
+        <!-- Fiole mère → étape ① (à hauteur y=89, bord droit du col x=126) -->
+        <line x1="128" y1="89" x2="200" y2="89" stroke="#2E75B6" stroke-width="2.5" marker-end="url(#arr)"/>
+        <!-- Étape ② → fiole fille (à hauteur y=196, bord gauche corps x≈502) -->
+        <line x1="476" y1="196" x2="498" y2="196" stroke="#2E75B6" stroke-width="2.5" marker-end="url(#arr)"/>
+
+        <!-- ====== FIOLE FILLE (droite, cx=570) ====== -->
+        <text x="570" y="16" text-anchor="middle" font-size="13" font-weight="bold" fill="#1E6B2E" font-family="'Segoe UI',Arial,sans-serif">Solution fille S₁</text>
+        <!-- Liquide vert clair (depuis le trait de jauge y=78) -->
+        <rect x="460" y="78" width="220" height="242" fill="#52C476" opacity="0.38" clip-path="url(#clip-fille)"/>
+        <!-- Reflet sur le col -->
+        <rect x="554" y="36" width="7" height="84" fill="white" opacity="0.18" clip-path="url(#clip-fille)"/>
+        <!-- Contour col -->
+        <rect x="554" y="36" width="32" height="84" fill="none" stroke="#1A5E38" stroke-width="2.5"/>
+        <!-- Contour corps -->
+        <path d="M554,120 C538,126 500,155 500,210 C500,250 532,272 570,272 C608,272 640,250 640,210 C640,155 602,126 586,120 Z" fill="none" stroke="#1A5E38" stroke-width="2.5"/>
+        <!-- Bouchon -->
+        <rect x="548" y="20" width="44" height="16" rx="4" fill="#888" stroke="#555" stroke-width="1.5"/>
+        <!-- Trait de jauge sur le col -->
+        <line x1="554" y1="78" x2="596" y2="78" stroke="#E74C3C" stroke-width="2.5"/>
+        <text x="600" y="82" text-anchor="start" font-size="9" fill="#E74C3C" font-weight="bold" font-family="'Segoe UI',Arial,sans-serif">trait de jauge</text>
+        <!-- Données bas -->
+        <text x="570" y="289" text-anchor="middle" font-size="11" font-weight="bold" fill="#1E6B2E" font-family="'Segoe UI',Arial,sans-serif">Vert clair</text>
+        <text x="570" y="304" text-anchor="middle" font-size="11" fill="#333" font-family="'Segoe UI',Arial,sans-serif">V<tspan dy="3" font-size="9">fille</tspan><tspan dy="-3"> = 50,0 mL</tspan></text>
+      </svg>
+
+      <!-- Tableau solution mère / fille -->
+      <table class="resp-table">
+        <thead>
+          <tr>
+            <th></th>
+            <th>Solution mère</th>
+            <th>Solution fille</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Volume</td>
+            <td><i>V</i><sub>mère</sub> = 10,0 mL</td>
+            <td><i>V</i><sub>fille</sub> = 50,0 mL</td>
+          </tr>
+          <tr>
+            <td>Concentration en masse</td>
+            <td><i>C</i><sub>m0</sub> = 20,0 g·L<sup>−1</sup></td>
+            <td><input type="text" id="t-cm1" style="width:130px"></td>
+          </tr>
+          <tr>
+            <td>Masse de soluté</td>
+            <td><input type="text" id="t-mmere"></td>
+            <td><input type="text" id="t-mfille"></td>
+          </tr>
+          <tr>
+            <td>Couleur</td>
+            <td>Verte intense</td>
+            <td>Plus claire</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Question 1 -->
+    <div class="question-block">
+      <div class="q-label">QUESTION 1</div>
+      <div class="question">
+        <p><strong>Calculer</strong> la masse de soluté dans les 10 mL prélevés. Puis <strong>calculer</strong> la concentration en masse de la solution fille. Que constatez-vous concernant la masse de soluté ?</p>
+      </div>
+      <textarea class="answer-field" id="r-q1" rows="3"></textarea>
+    </div>
+
+    <hr class="sep">
+
+    <!-- Document 2 -->
+    <span class="doc-label">Document 2 — Principe de la dilution et facteur de dilution</span>
+    <div class="doc-box">
+      <p>• Lors d'une dilution, la masse de soluté est conservée : <strong><i>m</i><sub>mère</sub> = <i>m</i><sub>fille</sub></strong></p>
+      <p>• On en déduit : <strong><i>C</i><sub>m0</sub> × <i>V</i><sub>mère</sub> = <i>C</i><sub>m1</sub> × <i>V</i><sub>fille</sub></strong></p>
+      <p>• Le facteur de dilution <i>F</i> est défini par :</p>
+      <p style="text-align:center;font-size:15px;padding:6px 0;">
+        <strong><i>F</i> = <i>C</i><sub>m0</sub> / <i>C</i><sub>m1</sub> = <i>V</i><sub>fille</sub> / <i>V</i><sub>mère</sub></strong>
+      </p>
+      <p><em>F</em> est toujours supérieur à 1 (la solution fille est toujours moins concentrée que la solution mère).</p>
+      <p>• Volume de solution mère à prélever :</p>
+      <p style="text-align:center;font-size:15px;padding:6px 0;">
+        <strong><i>V</i><sub>mère</sub> = <i>V</i><sub>fille</sub> / <i>F</i> = (<i>C</i><sub>m1</sub> × <i>V</i><sub>fille</sub>) / <i>C</i><sub>m0</sub></strong>
+      </p>
+    </div>
+
+    <!-- Question 2 -->
+    <div class="question-block" style="margin-bottom:6px;">
+      <div class="q-label">QUESTION 2a</div>
+      <div class="question">
+        <p>Pour la dilution du Document 1, <strong>calculez</strong> le facteur de dilution <i>F</i> à l'aide des concentrations des solutions mère et fille.</p>
+      </div>
+      <textarea class="answer-field" id="r-q2a" rows="2"></textarea>
+    </div>
+    <div class="question-block">
+      <div class="q-label">QUESTION 2b</div>
+      <div class="question">
+        <p><strong>Vérifiez</strong> que la relation <i>F</i> = <i>V</i><sub>fille</sub> / <i>V</i><sub>mère</sub> donne le même résultat.</p>
+      </div>
+      <textarea class="answer-field" id="r-q2b" rows="2"></textarea>
+    </div>
+
+    <hr class="sep">
+
+    <!-- Exercice 19 -->
+    <div class="ex-header">
+      <div class="ex-badge">Ex. 19</div>
+      <div>
+        <div class="ex-title">Utiliser un facteur de dilution</div>
+        <div class="ex-subtitle">| Effectuer un calcul.</div>
+      </div>
+    </div>
+    <div class="ex-enonce">
+      <p>La Bétadine® peut être assimilée à une solution aqueuse de concentration <i>t</i><sub>1</sub> = 10,5 g·L<sup>−1</sup> en diiode.</p>
+      <p>• <strong>Déterminer</strong> le volume <i>V</i><sub>1</sub> de Bétadine® à prélever pour préparer un volume <i>V</i><sub>2</sub> = 100,0 mL d'une solution diluée 4 fois.</p>
+    </div>
+    <textarea class="answer-field" id="r-ex19" rows="4"></textarea>
+
+    <div class="nav-bottom">
+      <button class="btn-nav" onclick="showTab(1)">Onglet suivant →</button>
+    </div>
+  </div>
+
+  <!-- ===== ONGLET 1 : Protocole de dilution ===== -->
+  <div class="tab-content" id="tab-1">
+    <div class="section-title">Protocole de dilution</div>
+
+    <!-- Document 3 -->
+    <span class="doc-label">Document 3 — Protocole de dilution</span>
+    <div class="doc-box">
+      <p>La dilution nécessite une verrerie volumétrique précise : une <strong>pipette jaugée</strong> pour prélever le volume mère <i>V</i><sub>mère</sub> et une <strong>fiole jaugée</strong> pour définir le volume fille <i>V</i><sub>fille</sub>.</p>
+      <p style="font-weight:700;color:var(--bleu);margin-top:4px;">Protocole en 5 étapes :</p>
+      <div class="steps-list">
+        <div class="step-item"><div class="step-num">1</div><p>Prélever avec une <strong>pipette jaugée</strong> un volume <i>V</i><sub>mère</sub> de solution mère versée dans un <strong>bécher de prélèvement</strong>.</p></div>
+        <div class="step-item"><div class="step-num">2</div><p>Verser le volume prélevé dans la <strong>fiole jaugée</strong> de volume <i>V</i><sub>fille</sub>.</p></div>
+        <div class="step-item"><div class="step-num">3</div><p>Remplir la fiole aux <strong>trois quarts</strong> avec de l'eau distillée. Boucher et agiter.</p></div>
+        <div class="step-item"><div class="step-num">4</div><p>Ajuster jusqu'au <strong>trait de jauge</strong> goutte à goutte.</p></div>
+        <div class="step-item"><div class="step-num">5</div><p>Boucher et agiter pour <strong>homogénéiser</strong>.</p></div>
+      </div>
+      <div class="attn-box" style="margin-top:12px;">
+        <p><strong>⚠ Attention — Erreurs à éviter</strong></p>
+        <p>• On prélève toujours dans un <strong>bécher de prélèvement</strong>, jamais directement dans un flacon ou une fiole.</p>
+        <p>• La <strong>pipette jaugée</strong> est nécessaire pour prélever un volume précis. Un bécher ou une éprouvette ne sont pas assez précis.</p>
+      </div>
+    </div>
+
+    <!-- Document 4 -->
+    <span class="doc-label">Document 4 — Comment choisir la verrerie ?</span>
+    <div class="doc-box">
+      <table class="mat-table">
+        <thead>
+          <tr>
+            <th>Verrerie</th>
+            <th>Usage</th>
+            <th>Comment obtenir le volume ?</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Pipette jaugée</strong></td>
+            <td>Prélever la solution mère</td>
+            <td>Par le calcul (<i>V</i><sub>mère</sub>)</td>
+          </tr>
+          <tr>
+            <td><strong>Fiole jaugée</strong></td>
+            <td>Préparer la solution fille</td>
+            <td>Défini par le volume de solution fille à préparer</td>
+          </tr>
+          <tr>
+            <td><strong>Bécher</strong></td>
+            <td>Verser la solution mère avant prélèvement</td>
+            <td>—</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <hr class="sep">
+
+    <!-- Exercice 13 -->
+    <div class="ex-header">
+      <div class="ex-badge">Ex. 13</div>
+      <div>
+        <div class="ex-title">Choisir le matériel de dilution</div>
+        <div class="ex-subtitle">| Justifier un protocole.</div>
+      </div>
+    </div>
+    <div class="ex-enonce">
+      <p>On dispose d'une solution <i>S</i><sub>1</sub> de concentration en permanganate de potassium égale à 50,0 g·L<sup>−1</sup>.</p>
+      <p>• Dans la liste ci-dessous, <strong>choisir</strong> la verrerie permettant de préparer une solution <i>S</i><sub>2</sub> de concentration 10,0 g·L<sup>−1</sup> en permanganate de potassium en utilisant <strong>le moins possible</strong> de solution <i>S</i><sub>1</sub> :</p>
+    </div>
+    <div class="donnees-box">
+      <h4>Verrerie disponible</h4>
+      <ul>
+        <li><strong>Fioles jaugées :</strong> 10,0 mL — 20,0 mL — 50,0 mL — 100,0 mL — 200,0 mL — 250 mL</li>
+        <li><strong>Pipettes jaugées :</strong> 10,0 mL — 20,0 mL — 25,0 mL — 50,0 mL</li>
+      </ul>
+    </div>
+    <textarea class="answer-field" id="r-ex13" rows="5"></textarea>
+
+    <hr class="sep">
+
+    <!-- Exercice 15 -->
+    <div class="ex-header">
+      <div class="ex-badge">Ex. 15</div>
+      <div>
+        <div class="ex-title">Identifier les erreurs de manipulation</div>
+        <div class="ex-subtitle">| Utiliser le matériel de manière adaptée.</div>
+      </div>
+    </div>
+    <div class="ex-enonce">
+      <p>Lors d'une dilution d'une solution d'acide chlorhydrique, un élève ajuste le niveau de la solution obtenue au trait de jauge de la fiole <strong>directement avec la pipette depuis le flacon d'acide</strong>.</p>
+    </div>
+    <div class="danger-box">
+      <h4>⚠ Données — Acide chlorhydrique dilué</h4>
+      <div class="danger-codes">
+        <span class="danger-code">H290</span>
+        <span class="danger-code">H314</span>
+        <span class="danger-code">H335</span>
+      </div>
+      <p style="margin-top:6px;font-size:11px;color:#666;">H290 : Peut être corrosif pour les métaux. H314 : Provoque des brûlures de la peau et des lésions oculaires graves. H335 : Peut irriter les voies respiratoires.</p>
+    </div>
+    <div class="sub-question">
+      <div class="sub-q-label">1. <strong>Expliquer</strong> en quoi le geste technique de l'élève ne permet pas une mesure précise du volume.</div>
+      <textarea class="answer-field" id="r-ex15-1" rows="3"></textarea>
+    </div>
+    <div class="sub-question">
+      <div class="sub-q-label">2. <strong>Lister</strong> les règles de sécurité non respectées par l'élève lors de la manipulation.</div>
+      <textarea class="answer-field" id="r-ex15-2" rows="3"></textarea>
+    </div>
+
+    <hr class="sep">
+
+    <!-- Exercice 11 -->
+    <div class="ex-header">
+      <div class="ex-badge">Ex. 11</div>
+      <div>
+        <div class="ex-title">Exploiter une concentration maximale</div>
+        <div class="ex-subtitle">| Rédiger une explication.</div>
+      </div>
+    </div>
+    <div class="ex-enonce">
+      <p>Soit une solution <i>S</i> saturée de concentration en chlorure de sodium égale à 360 g·L<sup>−1</sup>.</p>
+      <p>• <strong>Décrire</strong> l'évolution de cette concentration lors d'un ajout supplémentaire de chlorure de sodium solide à une solution <i>S</i>.</p>
+    </div>
+    <textarea class="answer-field" id="r-ex11" rows="4"></textarea>
+
+    <div class="nav-bottom">
+      <button class="btn-nav" onclick="showTab(0)">← Onglet précédent</button>
+      <button class="btn-nav" onclick="showTab(2)">Onglet suivant →</button>
+    </div>
+  </div>
+
+  <!-- ===== ONGLET 2 : Bilan ===== -->
+  <div class="tab-content" id="tab-2">
+    <div class="section-title">Bilan</div>
+
+    <div class="bilan-section">
+      <div class="bilan-header">📝 Texte à compléter — Ce que je dois retenir</div>
+      <div class="bilan-body">
+        <div class="bilan-bloc-title">Compléter le texte ci-dessous avec les mots manquants</div>
+        <div class="trous-block">
+          La <strong>dilution</strong> consiste à ajouter du <span class="trou"><input type="text" id="t1"></span> à une solution mère pour obtenir une solution <span class="trou"><input type="text" id="t2"></span> moins concentrée.
+          <br><br>
+          Lors d'une dilution, la <span class="trou"><input type="text" id="t3"></span> de soluté est <span class="trou"><input type="text" id="t4"></span>. On a donc : <strong><i>C</i><sub>m0</sub> × <i>V</i><sub>mère</sub> = <i>C</i><sub>m1</sub> × <i>V</i><sub>fille</sub></strong>.
+          <br><br>
+          Le facteur de dilution <i>F</i> est toujours <span class="trou"><input type="text" id="t5"></span> à 1. Il vaut : <strong><i>F</i> = <i>C</i><sub>m0</sub> / <i>C</i><sub>m1</sub> = <span class="trou"><input type="text" id="t6" style="width:140px"></span></strong>.
+          <br><br>
+          Pour préparer une solution diluée, on utilise une <span class="trou"><input type="text" id="t7"></span> jaugée pour prélever la solution mère, et une <span class="trou"><input type="text" id="t8"></span> jaugée pour définir le volume final. On prélève toujours dans un <span class="trou"><input type="text" id="t9"></span> de prélèvement, jamais directement dans le flacon.
+          <br><br>
+          On ajuste le volume final au <span class="trou"><input type="text" id="t10"></span> de jauge avec de l'eau distillée, puis on <strong>agite</strong> pour homogénéiser.
+        </div>
+      </div>
+    </div>
+
+    <div class="bilan-section">
+      <div class="bilan-header">✍️ Ma synthèse personnelle</div>
+      <div class="bilan-body">
+        <div class="bilan-bloc-title">Rédigez les éléments essentiels que vous retenez de cette activité</div>
+        <textarea class="answer-field" id="r-synthese" rows="7"></textarea>
+      </div>
+    </div>
+
+    <div class="nav-bottom">
+      <button class="btn-nav" onclick="showTab(1)">← Onglet précédent</button>
+    </div>
+  </div>
+</div>
+
+<div style="height:30px;"></div>
+
+<script>
+// ── Navigation ──────────────────────────────────────────────────────────────
+function showTab(n) {
+  document.querySelectorAll('.tab-content').forEach((el,i)=>{
+    el.classList.toggle('active', i===n);
+  });
+  document.querySelectorAll('.tab-btn').forEach((el,i)=>{
+    el.classList.toggle('active', i===n);
+  });
+  if(n===0) setTimeout(initCanvases, 40);
+}
+
+// ── Toolbox ──────────────────────────────────────────────────────────────────
+function toggleTB() {
+  const b = document.getElementById('tb-body');
+  const a = document.getElementById('tb-arrow');
+  b.classList.toggle('collapsed');
+  a.textContent = b.classList.contains('collapsed') ? '▶' : '▼';
+}
+
+// ── Canvas — vue microscopique dilution ───────────────────────────────────────
+function seededRand(seed) {
+  let s = seed >>> 0;
+  return function() {
+    s = Math.imul(s, 1664525) + 1013904223 >>> 0;
+    return s / 0xffffffff;
+  };
+}
+
+function drawMol(ctx, x, y, type) {
+  ctx.save();
+  ctx.beginPath();
+  if(type === 'h2o') {
+    ctx.arc(x, y, 5, 0, 2*Math.PI);
+    ctx.fillStyle = '#4A90D9';
+    ctx.strokeStyle = '#1A5FAD';
+    ctx.lineWidth = 0.8;
+    ctx.fill(); ctx.stroke();
+  } else if(type === 'sirop') {
+    // Hexagone vert pour sirop de menthe
+    for(let i=0;i<6;i++){
+      const a = i*Math.PI/3 - Math.PI/6;
+      i===0 ? ctx.moveTo(x+6*Math.cos(a), y+6*Math.sin(a))
+             : ctx.lineTo(x+6*Math.cos(a), y+6*Math.sin(a));
+    }
+    ctx.closePath();
+    ctx.fillStyle = '#2ECC71';
+    ctx.strokeStyle = '#1A8B4A';
+    ctx.lineWidth = 0.8;
+    ctx.fill(); ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawFlaskSolution(canvasId, siropCount, h2oCount, seed, isMere) {
+  const cv = document.getElementById(canvasId);
+  if(!cv) return;
+  const ctx = cv.getContext('2d');
+  const W = cv.width, H = cv.height;
+
+  // Fond flask
+  ctx.clearRect(0, 0, W, H);
+
+  // Dessiner la fiole / bécher stylisé
+  const pad = 10, liqTop = 25, liqBot = H - 10;
+  // Fiole
+  ctx.save();
+  ctx.beginPath();
+  // Forme de fiole simplifiée
+  ctx.moveTo(W/2-12, pad);
+  ctx.lineTo(W/2+12, pad);
+  ctx.lineTo(W/2+12, liqTop+10);
+  ctx.lineTo(W-pad, liqBot);
+  ctx.lineTo(pad, liqBot);
+  ctx.lineTo(W/2-12, liqTop+10);
+  ctx.closePath();
+  // Couleur du liquide
+  ctx.fillStyle = isMere ? 'rgba(46,204,113,0.25)' : 'rgba(46,204,113,0.09)';
+  ctx.fill();
+  ctx.strokeStyle = '#999';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+  ctx.restore();
+
+  // Zone de placement des molécules
+  const zoneW = W - 2*pad - 4;
+  const zoneH = liqBot - liqTop - 20;
+  const zx = pad + 2, zy = liqTop + 10;
+
+  const rng = seededRand(seed);
+  const placed = [];
+
+  function tryPlace(type) {
+    for(let t=0; t<120; t++){
+      const x = zx + 8 + rng() * (zoneW - 16);
+      const y = zy + 8 + rng() * (zoneH - 16);
+      let ok = true;
+      for(const [px,py] of placed){
+        if((x-px)**2+(y-py)**2 < 196){ ok=false; break; }
+      }
+      if(ok){ placed.push([x,y]); drawMol(ctx, x, y, type); return; }
+    }
+  }
+
+  for(let i=0; i<siropCount; i++) tryPlace('sirop');
+  for(let i=0; i<h2oCount;  i++) tryPlace('h2o');
+
+  // Trait de jauge
+  if(!isMere){
+    ctx.save();
+    ctx.setLineDash([4,3]);
+    ctx.strokeStyle = '#888';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(pad+2, liqTop+30);
+    ctx.lineTo(W-pad-2, liqTop+30);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.restore();
+  }
+}
+
+function initCanvases() {
+  // Solution mère : concentrée, beaucoup de sirop, peu d'eau visible
+  drawFlaskSolution('c-mere', 10, 12, 42, true);
+  // Solution fille : même nb de sirop mais plus d'eau (diluée 5x)
+  drawFlaskSolution('c-fille', 10, 30, 77, false);
+}
+
+window.addEventListener('load', () => {
+  setTimeout(initCanvases, 80);
+  charger();
+  setInterval(sauvegarder, 60000);
+});
+
+// ── Save / Load ───────────────────────────────────────────────────────────────
+const SAVE_KEY = 'ch2_ad2_dilution_v1';
+const ALL_IDS = [
+  'nom','prenom','classe','date-tp',
+  't-cm1','t-mmere','t-mfille',
+  'r-q1','r-q2a','r-q2b',
+  'r-ex19','r-ex13','r-ex15-1','r-ex15-2','r-ex11',
+  't1','t2','t3','t4','t5','t6','t7','t8','t9','t10',
+  'r-synthese'
+];
+
+function collectData() {
+  const d = {};
+  ALL_IDS.forEach(id => {
+    const el = document.getElementById(id);
+    if(el) d[id] = el.value;
+  });
+  return d;
+}
+
+function sauvegarder() {
+  try {
+    localStorage.setItem(SAVE_KEY, JSON.stringify(collectData()));
+    const st = document.getElementById('save-status');
+    const now = new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+    st.textContent = '✔ Sauvegardé à ' + now;
+    st.className = 'save-status ok';
+  } catch(e) {
+    document.getElementById('save-status').textContent = '⚠ Erreur de sauvegarde';
+    document.getElementById('save-status').className = 'save-status warn';
+  }
+}
+
+function charger() {
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    if(!raw) return;
+    const d = JSON.parse(raw);
+    ALL_IDS.forEach(id => {
+      const el = document.getElementById(id);
+      if(el && d[id] !== undefined) el.value = d[id];
+    });
+    const st = document.getElementById('save-status');
+    st.textContent = 'Données restaurées';
+    st.className = 'save-status ok';
+  } catch(e) {}
+}
+
+function effacer() {
+  if(!confirm('Effacer toutes les réponses ? Cette action est irréversible.')) return;
+  ALL_IDS.forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.value = '';
+  });
+  try { localStorage.removeItem(SAVE_KEY); } catch(e){}
+  const st = document.getElementById('save-status');
+  st.textContent = 'Données effacées';
+  st.className = 'save-status warn';
+}
+</script>
+</body>
+</html>
